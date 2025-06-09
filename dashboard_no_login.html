@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Executivo - Analytics</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0b14;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --bg-glass: rgba(17, 24, 39, 0.8);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-accent: #3b82f6;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #06b6d4;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-glass: rgba(59, 130, 246, 0.2);
+            --shadow-glow: 0 0 50px rgba(59, 130, 246, 0.15);
+            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%);
+            --gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #10b981 100%);
+            --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Glassmorphism Component */
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            box-shadow: var(--shadow-card);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
+        }
+
+        /* Modern Button Component */
+        .btn {
+            position: relative;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 16px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            overflow: hidden;
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(-2px);
+        }
+
+        /* Custom Input Component */
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: var(--bg-secondary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1), 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Custom Select Component */
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-field {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1.5rem;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            appearance: none;
+        }
+
+        .select-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: var(--bg-secondary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1), 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            top: 50%;
+            right: 1.5rem;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            pointer-events: none;
+            transition: transform 0.3s ease;
+        }
+
+        .select-wrapper:hover::after {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            line-height: 1.1;
+        }
+
+        .header-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .upload-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .file-input-btn {
+            padding: 1.5rem 3rem;
+            background: var(--gradient-secondary);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+
+        .file-input-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .file-input-btn:hover::before {
+            left: 100%;
+        }
+
+        .file-input-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(6, 182, 212, 0.4);
+        }
+
+        /* Filters */
+        .filters {
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .filters-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-apply {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            text-align: center;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Area Sections */
+        .area-section {
+            margin-bottom: 4rem;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .area-header {
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .area-title {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .area-badge {
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .area-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .badge-trafego { 
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        .badge-revenue { 
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .badge-consultoria { 
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        .badge-recuperacao { 
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        .badge-criativos { 
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: white;
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .kpi-card {
+            padding: 2rem;
+            border-radius: 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glass);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-glow);
+            border-color: var(--accent-primary);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-emoji {
+            font-size: 1.5rem;
+        }
+
+        .kpi-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .kpi-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .kpi-change.positive {
+            background: linear-gradient(135deg, var(--accent-success), #059669);
+            color: white;
+        }
+
+        .kpi-change.negative {
+            background: linear-gradient(135deg, var(--accent-danger), #dc2626);
+            color: white;
+        }
+
+        .kpi-change.neutral {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+        }
+
+        /* Charts */
+        .chart-card {
+            padding: 2rem;
+            margin-top: 2rem;
+            border-radius: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glass);
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        /* Pie Charts */
+        .pie-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .pie-chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Observations */
+        .observations {
+            padding: 2rem;
+            margin-bottom: 4rem;
+            border-radius: 20px;
+        }
+
+        .observation-item {
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border-radius: 16px;
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--accent-primary);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .observation-item:hover {
+            transform: translateX(8px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .observation-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .observation-date {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .observation-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Data Table */
+        .data-table {
+            padding: 2rem;
+            border-radius: 20px;
+            overflow-x: auto;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .data-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-primary);
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--bg-tertiary);
+            border-top: 4px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 2rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, var(--accent-danger), #dc2626);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header-title {
+                font-size: 2.5rem;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .pie-charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+        }
+
+        /* Custom option styling for selects */
+        option {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="header-title">DASHBOARD EXECUTIVO</h1>
+            <p class="header-subtitle">Plataforma de Business Intelligence e Analytics de Performance em Tempo Real</p>
+        </div>
+
+        <div class="upload-section glass-card" id="uploadSection">
+            <h3 class="upload-title">📊 Carregar Dados</h3>
+            <div class="file-input-wrapper">
+                <input type="file" id="csvFile" class="file-input" accept=".csv">
+                <button class="file-input-btn">
+                    Selecionar Arquivo CSV
+                </button>
+            </div>
+            <p style="margin-top: 1.5rem; color: var(--text-secondary);">
+                Faça upload dos seus dados CSV para iniciar a análise
+            </p>
+        </div>
+
+        <div class="filters glass-card" id="filtersSection">
+            <h3 class="filters-title">🔍 Filtros Avançados</h3>
+            <div class="filters-grid">
+                <div class="input-group">
+                    <label>📅 Data Inicial</label>
+                    <input type="date" id="startDate" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label>📅 Data Final</label>
+                    <input type="date" id="endDate" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label>🏢 Holding</label>
+                    <div class="select-wrapper">
+                        <select id="holdingFilter" class="select-field">
+                            <option value="">Todas as Holdings</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>📦 Produto</label>
+                    <div class="select-wrapper">
+                        <select id="produtoFilter" class="select-field">
+                            <option value="">Todos os Produtos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>📋 Área</label>
+                    <div class="select-wrapper">
+                        <select id="tipoFormularioFilter" class="select-field">
+                            <option value="">Todas as Áreas</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-apply">
+                <button class="btn" onclick="applyFilters()">Aplicar Filtros</button>
+            </div>
+        </div>
+
+        <div class="dashboard" id="dashboard">
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processando dados...</p>
+            </div>
+
+            <div class="kpi-section" id="kpiSection">
+                <h3 class="section-title">📊 Análise por Área</h3>
+                <div id="areasContainer"></div>
+            </div>
+
+            <div id="pieChartsSection">
+                <h3 class="section-title">🎯 Visão Financeira</h3>
+                <div class="pie-charts-grid" id="pieChartsGrid"></div>
+            </div>
+
+            <div id="observationsSection">
+                <h3 class="section-title">📝 Insights Estratégicos</h3>
+                <div class="observations glass-card" id="observationsContainer"></div>
+            </div>
+
+            <div id="dataTableSection">
+                <h3 class="section-title">📋 Dados Detalhados</h3>
+                <div class="data-table glass-card" id="dataTableContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let csvData = [];
+        let filteredData = [];
+        let charts = {};
+
+        // Area configuration with emojis and modern colors
+        const areaConfig = {
+            'Tráfego': {
+                indicators: [
+                    { field: 'Gasto', type: 'currency', emoji: '💰' },
+                    { field: 'Vendas', type: 'number', emoji: '📈' },
+                    { field: 'Vendas_Front', type: 'number', emoji: '🎯' },
+                    { field: 'ROI', type: 'median', emoji: '💹' },
+                    { field: 'Compras_Front', type: 'number', emoji: '🛒' },
+                    { field: 'Campanhas_Amanha', type: 'number', emoji: '📱' },
+                    { field: 'Variantes_Testadas', type: 'number', emoji: '🧪' },
+                    { field: 'Variantes_Validadas', type: 'number', emoji: '✅' },
+                    { field: 'Criativos_Testados', type: 'number', emoji: '🎨' },
+                    { field: 'Criativos_Rodaram', type: 'exact', emoji: '🔴' },
+                    { field: 'Criativos_Amanha', type: 'exact', emoji: '🔜' }
+                ],
+                observation: 'Observacao_Trafego',
+                color: '#3b82f6',
+                badge: 'badge-trafego'
+            },
+            'Revenue': {
+                indicators: [
+                    { field: 'FTD_vs_Vendas_Front', type: 'percentage', emoji: '💸' },
+                    { field: 'Registro_vs_Vendas_Front', type: 'percentage', emoji: '📊' },
+                    { field: 'Revenue_Share', type: 'currency', currency: 'USD', emoji: '💵' },
+                    { field: 'Media_Deposito', type: 'average', currency: 'USD', emoji: '⚖️' },
+                    { field: 'Valor_Depositado', type: 'currency', currency: 'USD', emoji: '💶' },
+                    { field: 'Lives_Feitass', type: 'number', emoji: '📺' },
+                    { field: 'Acessos_Liberados', type: 'number', emoji: '🔓' },
+                    { field: 'Quantidade_Depositos', type: 'number', emoji: '🏦' }
+                ],
+                observation: 'Observacao_Revenue',
+                color: '#10b981',
+                badge: 'badge-revenue'
+            },
+            'Consultoria': {
+                indicators: [
+                    { field: 'Num_Pessoas_Planejamento', type: 'number', emoji: '👥' },
+                    { field: 'Pessoas_Que_Chamou_Planejamento', type: 'number', emoji: '📞' },
+                    { field: 'Pessoas_Que_Revelou_Valor_Planejamento', type: 'number', emoji: '💡' },
+                    { field: 'Valor_Consultorias_Vendidas', type: 'currency', emoji: '💰' },
+                    { field: 'Consultorias_Vendidas', type: 'number', emoji: '📋' },
+                    { field: 'Google_Meet_Concluidos', type: 'number', emoji: '📹' },
+                    { field: 'Pessoas_Abordadas_Novas_Formulario', type: 'number', emoji: '📝' },
+                    { field: 'Pessoas_Abordadas_Compraram_10_Dias', type: 'number', emoji: '⏰' }
+                ],
+                observation: 'Observacao_Consultoria',
+                color: '#f59e0b',
+                badge: 'badge-consultoria'
+            },
+            'Recuperacao': {
+                indicators: [
+                    { field: 'Total_Deposito_Dia', type: 'currency', emoji: '💳' },
+                    { field: 'Total_Vendido', type: 'currency', emoji: '💎' },
+                    { field: 'Abandono_Carrinho', type: 'number', emoji: '🛑' },
+                    { field: 'Cartao_Recusado', type: 'number', emoji: '❌' },
+                    { field: 'Ligacoes_Atendidas', type: 'number', emoji: '☎️' },
+                    { field: 'Vendas_Por_Ligacao', type: 'number', emoji: '📲' },
+                    { field: 'Vendas_PIX_Pendente', type: 'number', emoji: '⏳' }
+                ],
+                observation: 'Observacao_Recuperacao',
+                color: '#ef4444',
+                badge: 'badge-recuperacao'
+            },
+            'Criativos': {
+                indicators: [
+                    { field: 'Criativos_Editados_Do_Zero', type: 'exact', emoji: '🆕' },
+                    { field: 'Criativos_Reprovados_Pelo_Lucas', type: 'exact', emoji: '🚫' },
+                    { field: 'Variantes_Criadas', type: 'exact', emoji: '🎯' },
+                    { field: 'Variantes_Editadas', type: 'exact', emoji: '✏️' }
+                ],
+                observation: null,
+                color: '#06b6d4',
+                badge: 'badge-criativos'
+            }
+        };
+
+        document.getElementById('csvFile').addEventListener('change', handleFile);
+
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('loading').style.display = 'block';
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                dynamicTyping: false,
+                complete: function(results) {
+                    processCsvData(results.data);
+                },
+                error: function(error) {
+                    alert('Error processing file: ' + error.message);
+                    document.getElementById('loading').style.display = 'none';
+                }
+            });
+        }
+
+        function processCsvData(data) {
+            csvData = data.filter(row => row && row.Data && row.Tipo_Formulario);
+            
+            if (csvData.length === 0) {
+                alert('No valid data found');
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
+            csvData.forEach(row => {
+                if (row.Data) {
+                    try {
+                        let dateStr = row.Data.toString();
+                        let parsedDate;
+
+                        if (dateStr.includes('/')) {
+                            const parts = dateStr.split('/');
+                            if (parts.length === 3) {
+                                parsedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                            }
+                        } else if (dateStr.includes('-')) {
+                            parsedDate = new Date(dateStr);
+                        }
+
+                        if (parsedDate && !isNaN(parsedDate.getTime())) {
+                            row.parsedDate = parsedDate;
+                        }
+                    } catch (e) {
+                        console.warn('Date error:', row.Data);
+                    }
+                }
+
+                Object.keys(row).forEach(key => {
+                    if (row[key] && typeof row[key] === 'string' && 
+                        key !== 'Data' && key !== 'Tipo_Formulario' && key !== 'Holding' && key !== 'Produto') {
+                        
+                        if (key.includes('Criativos_Rodaram') || key.includes('Criativos_Amanha') || 
+                            key.includes('Criativos_Editados') || key.includes('Variantes_')) {
+                            const exactValue = parseInt(row[key]);
+                            if (!isNaN(exactValue)) {
+                                row[key + '_num'] = exactValue;
+                            }
+                        } else {
+                            const cleaned = row[key].replace(/[^\d.,-]/g, '').replace(',', '.');
+                            const numValue = parseFloat(cleaned);
+                            if (!isNaN(numValue)) {
+                                row[key + '_num'] = numValue;
+                            }
+                        }
+                    }
+                });
+            });
+
+            setupFilters();
+            filteredData = [...csvData];
+            generateDashboard();
+            
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('filtersSection').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function setupFilters() {
+            const holdings = [...new Set(csvData.map(row => row.Holding).filter(Boolean))];
+            const produtos = [...new Set(csvData.map(row => row.Produto).filter(Boolean))];
+            const tiposFormulario = [...new Set(csvData.map(row => row.Tipo_Formulario).filter(Boolean))];
+
+            populateSelect('holdingFilter', holdings);
+            populateSelect('produtoFilter', produtos);
+            populateSelect('tipoFormularioFilter', tiposFormulario);
+
+            const dates = csvData.map(row => row.parsedDate).filter(Boolean);
+            if (dates.length > 0) {
+                const minDate = new Date(Math.min(...dates));
+                const maxDate = new Date(Math.max(...dates));
+                
+                document.getElementById('startDate').value = formatDateForInput(minDate);
+                document.getElementById('endDate').value = formatDateForInput(maxDate);
+            }
+        }
+
+        function populateSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            const currentValue = select.value;
+            
+            if (selectId === 'holdingFilter') {
+                select.innerHTML = '<option value="">Todas as Holdings</option>';
+            } else if (selectId === 'produtoFilter') {
+                select.innerHTML = '<option value="">Todos os Produtos</option>';
+            } else if (selectId === 'tipoFormularioFilter') {
+                select.innerHTML = '<option value="">Todas as Áreas</option>';
+            }
+            
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                select.appendChild(optionElement);
+            });
+            
+            select.value = currentValue;
+        }
+
+        function formatDateForInput(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const holding = document.getElementById('holdingFilter').value;
+            const produto = document.getElementById('produtoFilter').value;
+            const tipoFormulario = document.getElementById('tipoFormularioFilter').value;
+
+            filteredData = csvData.filter(row => {
+                if (startDate && row.parsedDate < new Date(startDate)) return false;
+                if (endDate && row.parsedDate > new Date(endDate)) return false;
+                if (holding && row.Holding !== holding) return false;
+                if (produto && row.Produto !== produto) return false;
+                if (tipoFormulario && row.Tipo_Formulario !== tipoFormulario) return false;
+                return true;
+            });
+
+            generateDashboard();
+        }
+
+        function generateDashboard() {
+            try {
+                generateAreasWithCharts();
+                generatePieCharts();
+                generateObservations();
+                generateDataTable();
+            } catch (error) {
+                console.error('Dashboard generation error:', error);
+            }
+        }
+
+        function calculateIndicatorValue(values, type) {
+            if (values.length === 0) return 0;
+            
+            switch (type) {
+                case 'median':
+                    const sorted = [...values].sort((a, b) => a - b);
+                    const mid = Math.floor(sorted.length / 2);
+                    return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+                case 'average':
+                    return values.reduce((a, b) => a + b, 0) / values.length;
+                case 'percentage':
+                    return values.reduce((a, b) => a + b, 0) / values.length;
+                case 'exact':
+                    return values[values.length - 1];
+                default:
+                    return values.reduce((a, b) => a + b, 0);
+            }
+        }
+
+        function formatValue(value, type, currency = 'BRL') {
+            if (type === 'currency') {
+                const symbol = currency === 'USD' ? '$' : 'R$';
+                return symbol + ' ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
+            if (type === 'average') {
+                const symbol = currency === 'USD' ? '$' : 'R$';
+                return symbol + ' ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
+            if (type === 'percentage') {
+                return value.toFixed(2) + '%';
+            }
+            if (type === 'exact') {
+                return Math.round(value).toString();
+            }
+            return value.toLocaleString('pt-BR');
+        }
+
+        function generateAreasWithCharts() {
+            const areasContainer = document.getElementById('areasContainer');
+            areasContainer.innerHTML = '';
+
+            Object.keys(areaConfig).forEach(area => {
+                const areaData = filteredData.filter(row => row.Tipo_Formulario === area);
+                
+                if (areaData.length === 0) return;
+
+                const config = areaConfig[area];
+                
+                const areaSection = document.createElement('div');
+                areaSection.className = 'area-section';
+                
+                const areaHeader = document.createElement('div');
+                areaHeader.className = 'area-header';
+                areaHeader.innerHTML = `
+                    <div class="area-title">
+                        <span class="area-badge ${config.badge}">${area}</span>
+                        <span>${config.indicators.length} Indicators</span>
+                    </div>
+                `;
+                
+                const kpiGrid = document.createElement('div');
+                kpiGrid.className = 'kpi-grid';
+                
+                config.indicators.forEach(indicator => {
+                    const values = [];
+                    
+                    areaData.forEach(row => {
+                        const numField = indicator.field + '_num';
+                        if (row[numField] !== undefined) {
+                            values.push(row[numField]);
+                        } else if (row[indicator.field]) {
+                            const val = parseFloat(row[indicator.field]);
+                            if (!isNaN(val)) values.push(val);
+                        }
+                    });
+                    
+                    if (values.length === 0) return;
+
+                    const calculatedValue = calculateIndicatorValue(values, indicator.type);
+                    const lastValue = values[values.length - 1] || 0;
+                    const prevValue = values[values.length - 2] || lastValue;
+                    const change = prevValue ? ((lastValue - prevValue) / prevValue * 100) : 0;
+
+                    const kpiCard = document.createElement('div');
+                    kpiCard.className = 'kpi-card';
+                    
+                    const fieldName = indicator.field.replace(/_/g, ' ');
+                    
+                    kpiCard.innerHTML = `
+                        <div class="kpi-header">
+                            <span class="kpi-emoji">${indicator.emoji}</span>
+                            <div class="kpi-title">${fieldName}</div>
+                        </div>
+                        <div class="kpi-value">${formatValue(calculatedValue, indicator.type, indicator.currency)}</div>
+                        <div class="kpi-change ${change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral'}">
+                            ${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${Math.abs(change).toFixed(1)}%
+                        </div>
+                    `;
+                    
+                    kpiGrid.appendChild(kpiCard);
+                });
+                
+                const chartCard = document.createElement('div');
+                chartCard.className = 'chart-card glass-card';
+                const chartId = 'chart-' + area.replace(/\s+/g, '') + '-' + Math.random().toString(36).substr(2, 5);
+                chartCard.innerHTML = `
+                    <div class="chart-title">${area} Performance Trends</div>
+                    <div class="chart-container">
+                        <canvas id="${chartId}"></canvas>
+                    </div>
+                `;
+                
+                areaSection.appendChild(areaHeader);
+                areaSection.appendChild(kpiGrid);
+                areaSection.appendChild(chartCard);
+                areasContainer.appendChild(areaSection);
+                
+                setTimeout(() => {
+                    createAreaChart(area, areaData, config, chartId);
+                }, 300 + Object.keys(areaConfig).indexOf(area) * 200);
+            });
+        }
+
+        function createAreaChart(area, areaData, config, chartId) {
+            try {
+                const ctx = document.getElementById(chartId);
+                if (!ctx) return;
+                
+                const context = ctx.getContext('2d');
+                
+                areaData.sort((a, b) => {
+                    if (!a.parsedDate || !b.parsedDate) return 0;
+                    return a.parsedDate - b.parsedDate;
+                });
+                
+                const mainIndicators = config.indicators.slice(0, 3);
+                const datasets = [];
+                const labels = [];
+                
+                const dateMap = new Map();
+                
+                areaData.forEach(row => {
+                    if (!row.parsedDate) return;
+                    
+                    const dateKey = row.parsedDate.toLocaleDateString('pt-BR');
+                    if (!dateMap.has(dateKey)) {
+                        dateMap.set(dateKey, {});
+                        labels.push(dateKey);
+                    }
+                    
+                    mainIndicators.forEach(indicator => {
+                        const numField = indicator.field + '_num';
+                        let value = 0;
+                        
+                        if (row[numField] !== undefined) {
+                            value = row[numField];
+                        } else if (row[indicator.field]) {
+                            const val = parseFloat(row[indicator.field]);
+                            if (!isNaN(val)) value = val;
+                        }
+                        
+                        dateMap.get(dateKey)[indicator.field] = value;
+                    });
+                });
+
+                mainIndicators.forEach((indicator, index) => {
+                    const data = labels.map(label => dateMap.get(label)[indicator.field] || 0);
+                    const colors = [config.color, config.color + 'CC', config.color + '99'];
+                    
+                    const fieldName = indicator.field.replace(/_/g, ' ');
+                    
+                    datasets.push({
+                        label: `${indicator.emoji} ${fieldName}`,
+                        data: data,
+                        borderColor: colors[index] || config.color,
+                        backgroundColor: (colors[index] || config.color) + '20',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 8,
+                        borderWidth: 3,
+                        pointBackgroundColor: colors[index] || config.color,
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    });
+                });
+
+                if (datasets.length === 0 || labels.length === 0) {
+                    document.getElementById(chartId).parentElement.innerHTML = `
+                        <div class="no-data">Insufficient data for chart</div>
+                    `;
+                    return;
+                }
+
+                charts[chartId] = new Chart(context, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    font: {
+                                        size: 12,
+                                        weight: '600'
+                                    },
+                                    color: '#f8fafc'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                                titleColor: '#f8fafc',
+                                bodyColor: '#cbd5e1',
+                                borderColor: config.color,
+                                borderWidth: 2,
+                                cornerRadius: 12,
+                                padding: 12
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(139, 92, 246, 0.1)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(139, 92, 246, 0.1)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error(`Chart error for ${area}:`, error);
+                document.getElementById(chartId).parentElement.innerHTML = `
+                    <div class="error-message">Error generating chart for ${area}</div>
+                `;
+            }
+        }
+
+        function generatePieCharts() {
+            const pieChartsGrid = document.getElementById('pieChartsGrid');
+            pieChartsGrid.innerHTML = '';
+
+            const lucroData = {};
+            filteredData.forEach(row => {
+                const area = row.Tipo_Formulario;
+                
+                let lucro = 0;
+                if (area === 'Tráfego') {
+                    const vendas = parseFloat(row.Vendas) || parseFloat(row.Vendas_num) || 0;
+                    const gasto = parseFloat(row.Gasto) || parseFloat(row.Gasto_num) || 0;
+                    lucro = vendas - gasto;
+                } else if (area === 'Revenue') {
+                    lucro = parseFloat(row.Valor_Depositado) || parseFloat(row.Valor_Depositado_num) || 0;
+                } else if (area === 'Consultoria') {
+                    lucro = parseFloat(row.Valor_Consultorias_Vendidas) || parseFloat(row.Valor_Consultorias_Vendidas_num) || 0;
+                } else if (area === 'Recuperacao') {
+                    lucro = parseFloat(row.Total_Vendido) || parseFloat(row.Total_Vendido_num) || 0;
+                }
+                
+                if (lucro > 0) {
+                    lucroData[area] = (lucroData[area] || 0) + lucro;
+                }
+            });
+
+            if (Object.keys(lucroData).length > 0) {
+                createPieChart('pieChartsGrid', 'Lucro por Departamento', lucroData, 
+                    ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']);
+            }
+
+            const faturamentoData = {};
+            filteredData.forEach(row => {
+                if (row.Produto) {
+                    const area = row.Tipo_Formulario;
+                    let faturamento = 0;
+                    
+                    if (area === 'Tráfego') {
+                        faturamento = parseFloat(row.Vendas) || parseFloat(row.Vendas_num) || 0;
+                    } else if (area === 'Revenue') {
+                        faturamento = parseFloat(row.Valor_Depositado) || parseFloat(row.Valor_Depositado_num) || 0;
+                    } else if (area === 'Consultoria') {
+                        faturamento = parseFloat(row.Valor_Consultorias_Vendidas) || parseFloat(row.Valor_Consultorias_Vendidas_num) || 0;
+                    } else if (area === 'Recuperacao') {
+                        faturamento = parseFloat(row.Total_Vendido) || parseFloat(row.Total_Vendido_num) || 0;
+                    }
+                    
+                    if (faturamento > 0) {
+                        faturamentoData[row.Produto] = (faturamentoData[row.Produto] || 0) + faturamento;
+                    }
+                }
+            });
+
+            if (Object.keys(faturamentoData).length > 1) {
+                createPieChart('pieChartsGrid', 'Faturamento por Produto', faturamentoData, 
+                    ['#06b6d4', '#8b5cf6', '#dc2626', '#d97706', '#059669']);
+            }
+        }
+
+        function createPieChart(containerId, title, data, colors) {
+            const chartCard = document.createElement('div');
+            chartCard.className = 'chart-card glass-card';
+            const chartId = 'pie-' + Math.random().toString(36).substr(2, 9);
+            chartCard.innerHTML = `
+                <div class="chart-title">${title}</div>
+                <div class="pie-chart-container">
+                    <canvas id="${chartId}"></canvas>
+                </div>
+            `;
+            
+            document.getElementById(containerId).appendChild(chartCard);
+            
+            setTimeout(() => {
+                try {
+                    const ctx = document.getElementById(chartId).getContext('2d');
+                    
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(data),
+                            datasets: [{
+                                data: Object.values(data),
+                                backgroundColor: colors,
+                                borderWidth: 3,
+                                borderColor: 'rgba(17, 24, 39, 0.8)',
+                                hoverOffset: 15,
+                                hoverBorderWidth: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true,
+                                        font: {
+                                            size: 12,
+                                            weight: '500'
+                                        },
+                                        color: '#f8fafc'
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                                    titleColor: '#f8fafc',
+                                    bodyColor: '#cbd5e1',
+                                    borderColor: '#8b5cf6',
+                                    borderWidth: 2,
+                                    cornerRadius: 12,
+                                    padding: 12
+                                }
+                            },
+                            cutout: '70%'
+                        }
+                    });
+                } catch (error) {
+                    console.error('Pie chart error:', error);
+                    chartCard.innerHTML = `
+                        <div class="chart-title">${title}</div>
+                        <div class="no-data">Error generating chart</div>
+                    `;
+                }
+            }, 100);
+        }
+
+        function generateObservations() {
+            const container = document.getElementById('observationsContainer');
+            container.innerHTML = '';
+
+            const observations = [];
+            
+            filteredData.forEach(row => {
+                const area = row.Tipo_Formulario;
+                const config = areaConfig[area];
+                
+                if (config && config.observation && row[config.observation]) {
+                    observations.push({
+                        date: row.parsedDate,
+                        area: area,
+                        text: row[config.observation],
+                        badge: config.badge
+                    });
+                }
+            });
+
+            observations.sort((a, b) => b.date - a.date);
+
+            if (observations.length === 0) {
+                container.innerHTML = '<div class="no-data">Nenhuma observação encontrada</div>';
+                return;
+            }
+
+            observations.slice(0, 10).forEach(obs => {
+                const obsItem = document.createElement('div');
+                obsItem.className = 'observation-item';
+                
+                obsItem.innerHTML = `
+                    <div class="observation-header">
+                        <div class="observation-date">${obs.date.toLocaleDateString('pt-BR')}</div>
+                        <span class="area-badge ${obs.badge}">${obs.area}</span>
+                    </div>
+                    <div class="observation-text">${obs.text}</div>
+                `;
+                
+                container.appendChild(obsItem);
+            });
+        }
+
+        function generateDataTable() {
+            const container = document.getElementById('dataTableContainer');
+            
+            if (filteredData.length === 0) {
+                container.innerHTML = '<div class="no-data">Nenhum dado encontrado</div>';
+                return;
+            }
+
+            const mainColumns = ['Data', 'Tipo_Formulario', 'Holding', 'Produto'];
+            const activeAreas = [...new Set(filteredData.map(row => row.Tipo_Formulario))];
+            const dataColumns = [];
+            
+            activeAreas.forEach(area => {
+                if (areaConfig[area]) {
+                    areaConfig[area].indicators.slice(0, 4).forEach(indicator => {
+                        if (!dataColumns.includes(indicator.field)) {
+                            dataColumns.push(indicator.field);
+                        }
+                    });
+                }
+            });
+
+            const allColumns = [...mainColumns, ...dataColumns.slice(0, 6)];
+
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>${allColumns.map(col => `<th>${col.replace(/_/g, ' ')}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filteredData.slice(0, 30).forEach(row => {
+                tableHTML += '<tr>';
+                allColumns.forEach(col => {
+                    let value = row[col];
+                    if (col === 'Data' && row.parsedDate) {
+                        value = row.parsedDate.toLocaleDateString('pt-BR');
+                    } else if (typeof value === 'number') {
+                        value = value.toLocaleString('pt-BR');
+                    } else if (!value) {
+                        value = '-';
+                    }
+                    tableHTML += `<td>${value}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+
+            tableHTML += '</tbody></table>';
+            
+            if (filteredData.length > 30) {
+                tableHTML += `<p style="text-align: center; margin-top: 15px; color: #94a3b8;">
+                    Mostrando os primeiros 30 de ${filteredData.length} registros
+                </p>`;
+            }
+            
+            container.innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>
