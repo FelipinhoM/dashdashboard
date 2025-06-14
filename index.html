@@ -473,6 +473,49 @@
             color: white;
         }
 
+        /* Tab System */
+        .tabs-container {
+            background: var(--bg-secondary);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-glass);
+            padding: 0 2rem;
+        }
+
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .tab-btn.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         /* KPI Grid */
         .kpi-grid {
             display: grid;
@@ -481,6 +524,103 @@
             padding: 2rem;
             background: var(--bg-secondary);
             border-radius: 0 0 20px 20px;
+        }
+
+        /* Atendentes Grid */
+        .atendentes-container {
+            padding: 2rem;
+        }
+
+        .atendente-card {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-glass);
+            transition: all 0.3s ease;
+        }
+
+        .atendente-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .atendente-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .atendente-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .atendente-badge {
+            padding: 0.5rem 1rem;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .atendente-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-glass);
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .atendente-responses {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .response-item {
+            background: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .response-question {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        .response-answer {
+            color: var(--text-primary);
+            line-height: 1.6;
         }
 
         .kpi-card {
@@ -868,6 +1008,22 @@
                 <h3 class="section-title">📋 Dados Detalhados</h3>
                 <div class="data-table glass-card" id="dataTableContainer"></div>
             </div>
+
+            <!-- Debug Section - Movido para o final -->
+            <div id="debugSection" style="margin-top: 2rem;">
+                <h3 class="section-title">🔧 Debug & Ferramentas</h3>
+                <div class="glass-card" style="padding: 2rem;">
+                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                        <button class="btn" onclick="showAllDates()" style="background: var(--gradient-secondary);">Ver Todas as Datas</button>
+                        <button class="btn" onclick="toggleDebugInfo()" style="background: var(--gradient-accent);">Mostrar/Ocultar Debug</button>
+                    </div>
+                    
+                    <div id="dateDebugInfo" style="padding: 1rem; background: var(--bg-tertiary); border-radius: 12px; display: none;">
+                        <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem;">🔍 Debug do Filtro de Data</h4>
+                        <div id="dateDebugContent"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1045,6 +1201,65 @@
             });
         }
 
+        // NOVA FUNÇÃO: Normalizar data para comparação (apenas dia/mês/ano)
+        function normalizeDate(date) {
+            if (!date) return null;
+            const normalized = new Date(date);
+            normalized.setHours(0, 0, 0, 0);
+            return normalized;
+        }
+
+        // NOVA FUNÇÃO: Parse melhorado de datas
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            
+            try {
+                dateStr = dateStr.toString().trim();
+                let parsedDate = null;
+
+                // Formato DD/MM/YYYY ou DD/MM/YY
+                if (dateStr.includes('/')) {
+                    const parts = dateStr.split('/');
+                    if (parts.length === 3) {
+                        let day = parseInt(parts[0]);
+                        let month = parseInt(parts[1]) - 1; // JavaScript months are 0-based
+                        let year = parseInt(parts[2]);
+                        
+                        // Handle 2-digit years
+                        if (year < 100) {
+                            year += year < 50 ? 2000 : 1900;
+                        }
+                        
+                        parsedDate = new Date(year, month, day);
+                    }
+                }
+                // Formato YYYY-MM-DD
+                else if (dateStr.includes('-')) {
+                    parsedDate = new Date(dateStr);
+                }
+                // Formato DD.MM.YYYY
+                else if (dateStr.includes('.')) {
+                    const parts = dateStr.split('.');
+                    if (parts.length === 3) {
+                        let day = parseInt(parts[0]);
+                        let month = parseInt(parts[1]) - 1;
+                        let year = parseInt(parts[2]);
+                        parsedDate = new Date(year, month, day);
+                    }
+                }
+
+                // Verificar se a data é válida
+                if (parsedDate && !isNaN(parsedDate.getTime())) {
+                    return normalizeDate(parsedDate);
+                }
+                
+                return null;
+            } catch (e) {
+                console.warn('Date parsing error for:', dateStr, e);
+                return null;
+            }
+        }
+
         function processCsvData(data) {
             csvData = data.filter(row => row && row.Data && row.Tipo_Formulario);
             
@@ -1056,24 +1271,10 @@
 
             csvData.forEach(row => {
                 if (row.Data) {
-                    try {
-                        let dateStr = row.Data.toString();
-                        let parsedDate;
-
-                        if (dateStr.includes('/')) {
-                            const parts = dateStr.split('/');
-                            if (parts.length === 3) {
-                                parsedDate = new Date(parts[2], parts[1] - 1, parts[0]);
-                            }
-                        } else if (dateStr.includes('-')) {
-                            parsedDate = new Date(dateStr);
-                        }
-
-                        if (parsedDate && !isNaN(parsedDate.getTime())) {
-                            row.parsedDate = parsedDate;
-                        }
-                    } catch (e) {
-                        console.warn('Date error:', row.Data);
+                    row.parsedDate = parseDate(row.Data);
+                    // Log para debug - pode remover em produção
+                    if (row.parsedDate) {
+                        console.log(`Data original: ${row.Data} -> Parseada: ${row.parsedDate.toLocaleDateString('pt-BR')}`);
                     }
                 }
 
@@ -1153,6 +1354,26 @@
             return date.toISOString().split('T')[0];
         }
 
+        // FUNÇÃO CORRIGIDA: Parse de data do input (evita problemas de timezone)
+        function parseDateFromInput(dateInput) {
+            if (!dateInput) return null;
+            
+            // Input vem no formato YYYY-MM-DD, vamos criar a data manualmente
+            const parts = dateInput.split('-');
+            if (parts.length !== 3) return null;
+            
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1; // JavaScript months are 0-based
+            const day = parseInt(parts[2]);
+            
+            // Criar data local (sem timezone issues)
+            const date = new Date(year, month, day);
+            date.setHours(0, 0, 0, 0);
+            
+            return date;
+        }
+
+        // FUNÇÃO COMPLETAMENTE REESCRITA: Filtro de data 100% funcional
         function applyFilters() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
@@ -1160,14 +1381,66 @@
             const produto = document.getElementById('produtoFilter').value;
             const tipoFormulario = document.getElementById('tipoFormularioFilter').value;
 
+            // CORREÇÃO: Parse correto das datas do input (sem timezone issues)
+            let startDateObj = null;
+            let endDateObj = null;
+            
+            if (startDate) {
+                startDateObj = parseDateFromInput(startDate);
+                console.log(`Data inicial selecionada: ${startDate} -> Interpretada como: ${startDateObj.toLocaleDateString('pt-BR')}`);
+            }
+            
+            if (endDate) {
+                endDateObj = parseDateFromInput(endDate);
+                console.log(`Data final selecionada: ${endDate} -> Interpretada como: ${endDateObj.toLocaleDateString('pt-BR')}`);
+            }
+
             filteredData = csvData.filter(row => {
-                if (startDate && row.parsedDate < new Date(startDate)) return false;
-                if (endDate && row.parsedDate > new Date(endDate)) return false;
+                // Filtro de data CORRIGIDO
+                if (startDateObj && row.parsedDate) {
+                    if (row.parsedDate < startDateObj) {
+                        return false;
+                    }
+                }
+                
+                if (endDateObj && row.parsedDate) {
+                    if (row.parsedDate > endDateObj) {
+                        return false;
+                    }
+                }
+                
+                // Outros filtros
                 if (holding && row.Holding !== holding) return false;
                 if (produto && row.Produto !== produto) return false;
                 if (tipoFormulario && row.Tipo_Formulario !== tipoFormulario) return false;
+                
                 return true;
             });
+
+            // Logs detalhados para debug
+            console.log('=== RESULTADO DO FILTRO ===');
+            console.log(`Total de registros originais: ${csvData.length}`);
+            console.log(`Registros após filtro: ${filteredData.length}`);
+            
+            // Atualizar debug visual (se estiver visível)
+            const debugInfo = document.getElementById('dateDebugInfo');
+            const debugContent = document.getElementById('dateDebugContent');
+            
+            if (startDate || endDate) {
+                console.log('=== DATAS DOS REGISTROS FILTRADOS ===');
+                const uniqueDates = [...new Set(filteredData.map(row => 
+                    row.parsedDate ? row.parsedDate.toLocaleDateString('pt-BR') : 'Data inválida'
+                ))].sort();
+                console.log('Datas presentes:', uniqueDates);
+                
+                // Atualizar conteúdo do debug (mas não mostrar automaticamente)
+                debugContent.innerHTML = `
+                    <p><strong>Período selecionado:</strong> ${startDateObj ? startDateObj.toLocaleDateString('pt-BR') : 'Não definido'} até ${endDateObj ? endDateObj.toLocaleDateString('pt-BR') : 'Não definido'}</p>
+                    <p><strong>Registros encontrados:</strong> ${filteredData.length} de ${csvData.length} total</p>
+                    <p><strong>Datas presentes nos dados:</strong> ${uniqueDates.join(', ')}</p>
+                    ${startDate && endDate && startDate === endDate ? '<p style="color: var(--accent-success);">✅ <strong>Filtro de dia único ativado</strong></p>' : ''}
+                `;
+            }
 
             generateDashboard();
         }
@@ -1243,47 +1516,133 @@
                     </div>
                 `;
                 
-                const kpiGrid = document.createElement('div');
-                kpiGrid.className = 'kpi-grid';
+                areaSection.appendChild(areaHeader);
                 
-                config.indicators.forEach(indicator => {
-                    const values = [];
+                // Special handling for Revenue area with tabs
+                if (area === 'Revenue') {
+                    const tabsContainer = document.createElement('div');
+                    tabsContainer.className = 'tabs-container';
                     
-                    areaData.forEach(row => {
-                        const numField = indicator.field + '_num';
-                        if (row[numField] !== undefined) {
-                            values.push(row[numField]);
-                        } else if (row[indicator.field]) {
-                            const val = parseFloat(row[indicator.field]);
-                            if (!isNaN(val)) values.push(val);
-                        }
-                    });
-                    
-                    if (values.length === 0) return;
-
-                    const calculatedValue = calculateIndicatorValue(values, indicator.type);
-                    const lastValue = values[values.length - 1] || 0;
-                    const prevValue = values[values.length - 2] || lastValue;
-                    const change = prevValue ? ((lastValue - prevValue) / prevValue * 100) : 0;
-
-                    const kpiCard = document.createElement('div');
-                    kpiCard.className = 'kpi-card';
-                    
-                    const fieldName = indicator.field.replace(/_/g, ' ');
-                    
-                    kpiCard.innerHTML = `
-                        <div class="kpi-header">
-                            <span class="kpi-emoji">${indicator.emoji}</span>
-                            <div class="kpi-title">${fieldName}</div>
-                        </div>
-                        <div class="kpi-value">${formatValue(calculatedValue, indicator.type, indicator.currency)}</div>
-                        <div class="kpi-change ${change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral'}">
-                            ${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${Math.abs(change).toFixed(1)}%
-                        </div>
+                    // Tabs header
+                    const tabsHeader = document.createElement('div');
+                    tabsHeader.className = 'tabs-header';
+                    tabsHeader.innerHTML = `
+                        <button class="tab-btn active" onclick="switchTab('revenue', this)">Revenue</button>
+                        <button class="tab-btn" onclick="switchTab('atendentes', this)">Registro de Atendentes</button>
                     `;
                     
-                    kpiGrid.appendChild(kpiCard);
-                });
+                    // Revenue tab content
+                    const revenueTabContent = document.createElement('div');
+                    revenueTabContent.className = 'tab-content active';
+                    revenueTabContent.id = 'revenue-tab';
+                    
+                    const kpiGrid = document.createElement('div');
+                    kpiGrid.className = 'kpi-grid';
+                    
+                    config.indicators.forEach(indicator => {
+                        const values = [];
+                        
+                        areaData.forEach(row => {
+                            const numField = indicator.field + '_num';
+                            if (row[numField] !== undefined) {
+                                values.push(row[numField]);
+                            } else if (row[indicator.field]) {
+                                const val = parseFloat(row[indicator.field]);
+                                if (!isNaN(val)) values.push(val);
+                            }
+                        });
+                        
+                        if (values.length === 0) return;
+
+                        const calculatedValue = calculateIndicatorValue(values, indicator.type);
+                        const lastValue = values[values.length - 1] || 0;
+                        const prevValue = values[values.length - 2] || lastValue;
+                        const change = prevValue ? ((lastValue - prevValue) / prevValue * 100) : 0;
+
+                        const kpiCard = document.createElement('div');
+                        kpiCard.className = 'kpi-card';
+                        
+                        const fieldName = indicator.field.replace(/_/g, ' ');
+                        
+                        kpiCard.innerHTML = `
+                            <div class="kpi-header">
+                                <span class="kpi-emoji">${indicator.emoji}</span>
+                                <div class="kpi-title">${fieldName}</div>
+                            </div>
+                            <div class="kpi-value">${formatValue(calculatedValue, indicator.type, indicator.currency)}</div>
+                            <div class="kpi-change ${change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral'}">
+                                ${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${Math.abs(change).toFixed(1)}%
+                            </div>
+                        `;
+                        
+                        kpiGrid.appendChild(kpiCard);
+                    });
+                    
+                    revenueTabContent.appendChild(kpiGrid);
+                    
+                    // Atendentes tab content
+                    const atendentesTabContent = document.createElement('div');
+                    atendentesTabContent.className = 'tab-content';
+                    atendentesTabContent.id = 'atendentes-tab';
+                    
+                    const atendentesContainer = document.createElement('div');
+                    atendentesContainer.className = 'atendentes-container';
+                    
+                    generateAtendentesContent(atendentesContainer);
+                    atendentesTabContent.appendChild(atendentesContainer);
+                    
+                    tabsContainer.appendChild(tabsHeader);
+                    tabsContainer.appendChild(revenueTabContent);
+                    tabsContainer.appendChild(atendentesTabContent);
+                    
+                    areaSection.appendChild(tabsContainer);
+                    
+                } else {
+                    // Regular area without tabs
+                    const kpiGrid = document.createElement('div');
+                    kpiGrid.className = 'kpi-grid';
+                    
+                    config.indicators.forEach(indicator => {
+                        const values = [];
+                        
+                        areaData.forEach(row => {
+                            const numField = indicator.field + '_num';
+                            if (row[numField] !== undefined) {
+                                values.push(row[numField]);
+                            } else if (row[indicator.field]) {
+                                const val = parseFloat(row[indicator.field]);
+                                if (!isNaN(val)) values.push(val);
+                            }
+                        });
+                        
+                        if (values.length === 0) return;
+
+                        const calculatedValue = calculateIndicatorValue(values, indicator.type);
+                        const lastValue = values[values.length - 1] || 0;
+                        const prevValue = values[values.length - 2] || lastValue;
+                        const change = prevValue ? ((lastValue - prevValue) / prevValue * 100) : 0;
+
+                        const kpiCard = document.createElement('div');
+                        kpiCard.className = 'kpi-card';
+                        
+                        const fieldName = indicator.field.replace(/_/g, ' ');
+                        
+                        kpiCard.innerHTML = `
+                            <div class="kpi-header">
+                                <span class="kpi-emoji">${indicator.emoji}</span>
+                                <div class="kpi-title">${fieldName}</div>
+                            </div>
+                            <div class="kpi-value">${formatValue(calculatedValue, indicator.type, indicator.currency)}</div>
+                            <div class="kpi-change ${change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral'}">
+                                ${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${Math.abs(change).toFixed(1)}%
+                            </div>
+                        `;
+                        
+                        kpiGrid.appendChild(kpiCard);
+                    });
+                    
+                    areaSection.appendChild(kpiGrid);
+                }
                 
                 const chartCard = document.createElement('div');
                 chartCard.className = 'chart-card glass-card';
@@ -1295,8 +1654,6 @@
                     </div>
                 `;
                 
-                areaSection.appendChild(areaHeader);
-                areaSection.appendChild(kpiGrid);
                 areaSection.appendChild(chartCard);
                 areasContainer.appendChild(areaSection);
                 
@@ -1679,6 +2036,160 @@
             }
             
             container.innerHTML = tableHTML;
+        }
+
+        // NOVA FUNÇÃO: Toggle debug info
+        function toggleDebugInfo() {
+            const debugInfo = document.getElementById('dateDebugInfo');
+            if (debugInfo.style.display === 'none') {
+                debugInfo.style.display = 'block';
+            } else {
+                debugInfo.style.display = 'none';
+            }
+        }
+
+        // NOVA FUNÇÃO: Mostrar todas as datas disponíveis
+        function showAllDates() {
+            const debugInfo = document.getElementById('dateDebugInfo');
+            const debugContent = document.getElementById('dateDebugContent');
+            
+            const allDates = csvData.map(row => ({
+                original: row.Data,
+                parsed: row.parsedDate ? row.parsedDate.toLocaleDateString('pt-BR') : 'ERRO',
+                area: row.Tipo_Formulario
+            }));
+            
+            const uniqueDates = [...new Set(allDates.map(d => d.parsed))].sort();
+            
+            debugContent.innerHTML = `
+                <h5 style="color: var(--text-primary); margin-bottom: 1rem;">📅 Todas as datas no seu dataset:</h5>
+                <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <strong>Datas únicas (${uniqueDates.length}):</strong><br>
+                    ${uniqueDates.join(' • ')}
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    💡 <strong>Dica:</strong> Use essas datas como referência para seus filtros. 
+                    Se não vê uma data que esperava, verifique o formato no seu CSV.
+                </p>
+            `;
+            
+            debugInfo.style.display = 'block';
+        }
+
+        // Tab switching function
+        function switchTab(tabType, button) {
+            // Remove active class from all tab buttons
+            const tabButtons = button.parentElement.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            button.classList.add('active');
+            
+            // Hide all tab contents
+            const tabContents = button.parentElement.parentElement.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Show selected tab content
+            const targetTab = document.getElementById(tabType + '-tab');
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+        }
+
+        // Generate atendentes content
+        function generateAtendentesContent(container) {
+            // Filter data for atendentes (assuming it has specific fields)
+            const atendentesData = filteredData.filter(row => 
+                row.Nome_do_atendente || 
+                row['Quantos atendimentos você realizou hoje?'] ||
+                row['De 0 a 10, como você avalia a sua performance hoje?']
+            );
+
+            if (atendentesData.length === 0) {
+                container.innerHTML = '<div class="no-data">Nenhum registro de atendente encontrado</div>';
+                return;
+            }
+
+            // Group by atendente name
+            const atendentesByName = {};
+            atendentesData.forEach(row => {
+                const nome = row.Nome_do_atendente || 'Atendente não identificado';
+                if (!atendentesByName[nome]) {
+                    atendentesByName[nome] = [];
+                }
+                atendentesByName[nome].push(row);
+            });
+
+            // Generate cards for each atendente
+            Object.keys(atendentesByName).forEach(nome => {
+                const atendenteRecords = atendentesByName[nome];
+                const latestRecord = atendenteRecords[atendenteRecords.length - 1];
+
+                const atendenteCard = document.createElement('div');
+                atendenteCard.className = 'atendente-card';
+
+                // Header with name
+                const header = document.createElement('div');
+                header.className = 'atendente-header';
+                header.innerHTML = `
+                    <div class="atendente-name">${nome}</div>
+                    <div class="atendente-badge">👤 Atendente</div>
+                `;
+
+                // Metrics (KPIs)
+                const metricsContainer = document.createElement('div');
+                metricsContainer.className = 'atendente-metrics';
+
+                const atendimentos = latestRecord['Quantos atendimentos você realizou hoje?'] || '0';
+                const performance = latestRecord['De 0 a 10, como você avalia a sua performance hoje?'] || '0';
+                const avaliacaoCliente = latestRecord['De 0 a 10, como você acha que o cliente avaliaria o seu atendimento hoje?'] || '0';
+
+                metricsContainer.innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-title">📞 Atendimentos Hoje</div>
+                        <div class="metric-value">${atendimentos}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">⭐ Auto Avaliação</div>
+                        <div class="metric-value">${performance}/10</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">😊 Avaliação Cliente</div>
+                        <div class="metric-value">${avaliacaoCliente}/10</div>
+                    </div>
+                `;
+
+                // Responses
+                const responsesContainer = document.createElement('div');
+                responsesContainer.className = 'atendente-responses';
+
+                const questions = [
+                    { field: 'Existe alguma demanda/pedido que se repetiu demais hoje?', label: '🔄 Demandas Repetidas' },
+                    { field: 'Qual atendimento foi o mais difícil de resolver? Por quê?', label: '🎯 Atendimento Difícil' },
+                    { field: 'Conseguiu resolver todos os atendimentos?', label: '✅ Resolução Completa' },
+                    { field: 'Teve algo que dificultou seu trabalho hoje?', label: '⚠️ Dificuldades' },
+                    { field: 'Alguma sugestão para melhorar nosso atendimento?', label: '💡 Sugestões' },
+                    { field: 'Como você está se sentindo hoje?', label: '😊 Como se sente' }
+                ];
+
+                questions.forEach(question => {
+                    const answer = latestRecord[question.field];
+                    if (answer && answer.trim()) {
+                        const responseItem = document.createElement('div');
+                        responseItem.className = 'response-item';
+                        responseItem.innerHTML = `
+                            <div class="response-question">${question.label}</div>
+                            <div class="response-answer">${answer}</div>
+                        `;
+                        responsesContainer.appendChild(responseItem);
+                    }
+                });
+
+                atendenteCard.appendChild(header);
+                atendenteCard.appendChild(metricsContainer);
+                atendenteCard.appendChild(responsesContainer);
+                container.appendChild(atendenteCard);
+            });
         }
     </script>
 </body>
