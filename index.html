@@ -898,6 +898,85 @@
             color: var(--text-primary);
             padding: 0.5rem;
         }
+
+        /* NOVO: Estilos para o Resumo Executivo */
+        .holding-summary {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .summary-grid {
+            animation: staggerFadeIn 1s ease-out;
+        }
+
+        .summary-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .summary-card:hover::before {
+            left: 100%;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes staggerFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            50% {
+                opacity: 0.5;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Animação para os valores quando atualizarem */
+        .summary-card div[id*="Total"],
+        .summary-card div[id*="Lucro"],
+        .summary-card div[id*="margem"] {
+            animation: countUp 0.6s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -989,6 +1068,47 @@
                 <p>Processando dados...</p>
             </div>
 
+            <!-- NOVO: Resumo Geral da Holding -->
+            <div class="holding-summary" id="holdingSummary" style="margin-bottom: 3rem;">
+                <h3 class="section-title">💼 Resumo Executivo da Holding</h3>
+                
+                <!-- NOVO: Indicador de conversão de moeda -->
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div id="currencyIndicator" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg-tertiary); padding: 0.75rem 1.5rem; border-radius: 50px; border: 1px solid var(--border-glass);">
+                        <span style="font-size: 1rem;">💱</span>
+                        <span style="color: var(--text-secondary); font-size: 0.875rem;">Cotação USD/BRL:</span>
+                        <span id="currentRate" style="color: var(--accent-primary); font-weight: 600;">R$ 5,60</span>
+                        <span id="rateSource" style="background: var(--accent-primary); color: white; padding: 0.25rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">FIXO</span>
+                    </div>
+                </div>
+                
+                <div class="summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <div class="summary-card glass-card" style="padding: 2.5rem; text-align: center; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient-primary);"></div>
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">💰</div>
+                        <h4 style="color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem;">Faturamento Total</h4>
+                        <div id="faturamentoTotal" style="font-size: 2.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">R$ 0,00</div>
+                        <div id="faturamentoChange" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem; font-weight: 600;"></div>
+                    </div>
+                    
+                    <div class="summary-card glass-card" style="padding: 2.5rem; text-align: center; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient-secondary);"></div>
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📈</div>
+                        <h4 style="color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem;">Lucro Líquido</h4>
+                        <div id="lucroTotal" style="font-size: 2.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">R$ 0,00</div>
+                        <div id="lucroChange" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem; font-weight: 600;"></div>
+                    </div>
+                    
+                    <div class="summary-card glass-card" style="padding: 2.5rem; text-align: center; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient-accent);"></div>
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🎯</div>
+                        <h4 style="color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem;">Margem de Lucro</h4>
+                        <div id="margemLucro" style="font-size: 2.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">0%</div>
+                        <div id="margemChange" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem; font-weight: 600;"></div>
+                    </div>
+                </div>
+            </div>
+
             <div class="kpi-section" id="kpiSection">
                 <h3 class="section-title">📊 Análise por Área</h3>
                 <div id="areasContainer"></div>
@@ -1016,11 +1136,18 @@
                     <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
                         <button class="btn" onclick="showAllDates()" style="background: var(--gradient-secondary);">Ver Todas as Datas</button>
                         <button class="btn" onclick="toggleDebugInfo()" style="background: var(--gradient-accent);">Mostrar/Ocultar Debug</button>
+                        <button class="btn" onclick="toggleFaturamentoDebug()" style="background: linear-gradient(135deg, #f59e0b, #d97706);">Debug Faturamento</button>
                     </div>
                     
-                    <div id="dateDebugInfo" style="padding: 1rem; background: var(--bg-tertiary); border-radius: 12px; display: none;">
+                    <div id="dateDebugInfo" style="padding: 1rem; background: var(--bg-tertiary); border-radius: 12px; display: none; margin-bottom: 2rem;">
                         <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem;">🔍 Debug do Filtro de Data</h4>
                         <div id="dateDebugContent"></div>
+                    </div>
+
+                    <!-- NOVO: Debug detalhado do faturamento -->
+                    <div id="faturamentoDebugInfo" style="padding: 1rem; background: var(--bg-tertiary); border-radius: 12px; display: none;">
+                        <h4 style="color: var(--accent-warning); margin-bottom: 1rem;">💰 Debug do Cálculo de Faturamento</h4>
+                        <div id="faturamentoDebugContent"></div>
                     </div>
                 </div>
             </div>
@@ -1031,6 +1158,10 @@
         let csvData = [];
         let filteredData = [];
         let charts = {};
+        
+        // NOVO: Variável global para cotação do dólar
+        let dollarRate = 5.60; // Fallback fixo
+        let dollarRateSource = 'fixo'; // 'api' ou 'fixo'
 
         // Area configuration with emojis and modern colors
         const areaConfig = {
@@ -1112,6 +1243,66 @@
         document.getElementById('csvFile').addEventListener('change', handleFile);
         document.getElementById('loginForm').addEventListener('submit', handleLogin);
 
+        // NOVA FUNÇÃO: Buscar cotação do dólar
+        async function fetchDollarRate() {
+            try {
+                console.log('🔄 Buscando cotação atual do dólar...');
+                
+                // Tentar várias APIs de cotação
+                const apis = [
+                    'https://api.exchangerate-api.com/v4/latest/USD',
+                    'https://api.fixer.io/latest?base=USD&access_key=free', // Fallback
+                    'https://economia.awesomeapi.com.br/last/USD-BRL' // API brasileira
+                ];
+                
+                // Primeira tentativa - ExchangeRate API
+                try {
+                    const response = await fetch(apis[0]);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.rates && data.rates.BRL) {
+                            dollarRate = parseFloat(data.rates.BRL);
+                            dollarRateSource = 'api-exchangerate';
+                            console.log(`✅ Cotação obtida via API: USD 1 = R$ ${dollarRate.toFixed(4)}`);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.log('❌ ExchangeRate API falhou');
+                }
+                
+                // Segunda tentativa - API brasileira
+                try {
+                    const response = await fetch(apis[2]);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.USDBRL && data.USDBRL.bid) {
+                            dollarRate = parseFloat(data.USDBRL.bid);
+                            dollarRateSource = 'api-awesomeapi';
+                            console.log(`✅ Cotação obtida via AwesomeAPI: USD 1 = R$ ${dollarRate.toFixed(4)}`);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.log('❌ AwesomeAPI falhou');
+                }
+                
+                // Se todas as APIs falharam, usar cotação fixa
+                throw new Error('Todas as APIs falharam');
+                
+            } catch (error) {
+                console.log(`⚠️ Erro ao buscar cotação: ${error.message}`);
+                console.log(`📌 Usando cotação fixa: USD 1 = R$ ${dollarRate.toFixed(2)}`);
+                dollarRateSource = 'fixo';
+            }
+        }
+
+        // NOVA FUNÇÃO: Converter dólar para real
+        function convertUsdToBrl(usdValue) {
+            if (!usdValue || isNaN(usdValue)) return 0;
+            return parseFloat(usdValue) * dollarRate;
+        }
+
         async function handleLogin(event) {
             event.preventDefault();
             
@@ -1125,6 +1316,9 @@
             document.getElementById('loginError').style.display = 'none';
             
             try {
+                // NOVO: Buscar cotação do dólar primeiro
+                await fetchDollarRate();
+                
                 const response = await fetch('https://primary-production-1121.up.railway.app/webhook/dados', {
                     method: 'GET',
                     headers: {
@@ -1167,6 +1361,14 @@
         function processCsvFromText(csvText) {
             document.getElementById('loading').style.display = 'block';
             
+            // NOVO: Buscar cotação se ainda não foi buscada
+            if (dollarRateSource === 'fixo' && dollarRate === 5.60) {
+                fetchDollarRate().then(() => {
+                    // Reprocessar após obter cotação
+                    console.log('🔄 Reprocessando com nova cotação...');
+                });
+            }
+            
             Papa.parse(csvText, {
                 header: true,
                 skipEmptyLines: true,
@@ -1187,17 +1389,20 @@
 
             document.getElementById('loading').style.display = 'block';
 
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                dynamicTyping: false,
-                complete: function(results) {
-                    processCsvData(results.data);
-                },
-                error: function(error) {
-                    alert('Error processing file: ' + error.message);
-                    document.getElementById('loading').style.display = 'none';
-                }
+            // NOVO: Buscar cotação antes de processar arquivo
+            fetchDollarRate().then(() => {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    dynamicTyping: false,
+                    complete: function(results) {
+                        processCsvData(results.data);
+                    },
+                    error: function(error) {
+                        alert('Error processing file: ' + error.message);
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                });
             });
         }
 
@@ -1301,6 +1506,10 @@
 
             setupFilters();
             filteredData = [...csvData];
+            
+            // NOVO: Atualizar indicador de cotação na primeira carga
+            updateCurrencyIndicator();
+            
             generateDashboard();
             
             document.getElementById('uploadSection').style.display = 'none';
@@ -1447,12 +1656,210 @@
 
         function generateDashboard() {
             try {
+                generateHoldingSummary();
                 generateAreasWithCharts();
                 generatePieCharts();
                 generateObservations();
                 generateDataTable();
             } catch (error) {
                 console.error('Dashboard generation error:', error);
+            }
+        }
+
+        // FUNÇÃO MELHORADA: Gerar resumo executivo da holding
+        function generateHoldingSummary() {
+            let faturamentoTotal = 0;
+            let gastosTotal = 0;
+            
+            // NOVO: Variáveis para debug detalhado
+            let faturamentoTrafego = 0;
+            let faturamentoRevenue = 0;
+            let faturamentoConsultoria = 0;
+            let faturamentoRecuperacao = 0;
+            let gastosDebug = 0;
+            
+            // Arrays para calcular tendências
+            const faturamentoPorData = {};
+            const gastosPorData = {};
+            
+            // Calcular faturamento e gastos por área e por data
+            filteredData.forEach(row => {
+                const area = row.Tipo_Formulario;
+                const dataKey = row.parsedDate ? row.parsedDate.toLocaleDateString('pt-BR') : 'sem_data';
+                
+                if (!faturamentoPorData[dataKey]) faturamentoPorData[dataKey] = 0;
+                if (!gastosPorData[dataKey]) gastosPorData[dataKey] = 0;
+                
+                if (area === 'Tráfego') {
+                    const vendas = parseFloat(row.Vendas) || parseFloat(row.Vendas_num) || 0;
+                    const gastos = parseFloat(row.Gasto) || parseFloat(row.Gasto_num) || 0;
+                    faturamentoTotal += vendas;
+                    gastosTotal += gastos;
+                    faturamentoPorData[dataKey] += vendas;
+                    gastosPorData[dataKey] += gastos;
+                    
+                    // Debug
+                    faturamentoTrafego += vendas;
+                    gastosDebug += gastos;
+                } else if (area === 'Revenue') {
+                    // ALTERAÇÃO: Converter Revenue Share de USD para BRL
+                    const revenueShareUsd = parseFloat(row.Revenue_Share) || parseFloat(row.Revenue_Share_num) || 0;
+                    const revenueShareBrl = convertUsdToBrl(revenueShareUsd);
+                    faturamentoTotal += revenueShareBrl;
+                    faturamentoPorData[dataKey] += revenueShareBrl;
+                    
+                    // Debug - salvar valores originais e convertidos
+                    faturamentoRevenue += revenueShareBrl;
+                    if (!row._revenueDebug) {
+                        row._revenueDebug = {
+                            originalUsd: revenueShareUsd,
+                            convertedBrl: revenueShareBrl,
+                            rate: dollarRate
+                        };
+                    }
+                } else if (area === 'Consultoria') {
+                    const valorConsultorias = parseFloat(row.Valor_Consultorias_Vendidas) || parseFloat(row.Valor_Consultorias_Vendidas_num) || 0;
+                    faturamentoTotal += valorConsultorias;
+                    faturamentoPorData[dataKey] += valorConsultorias;
+                    
+                    // Debug
+                    faturamentoConsultoria += valorConsultorias;
+                } else if (area === 'Recuperacao') {
+                    const totalVendido = parseFloat(row.Total_Vendido) || parseFloat(row.Total_Vendido_num) || 0;
+                    faturamentoTotal += totalVendido;
+                    faturamentoPorData[dataKey] += totalVendido;
+                    
+                    // Debug
+                    faturamentoRecuperacao += totalVendido;
+                }
+            });
+            
+            const lucroLiquido = faturamentoTotal - gastosTotal;
+            const margemLucro = faturamentoTotal > 0 ? (lucroLiquido / faturamentoTotal) * 100 : 0;
+            
+            // Calcular mudanças baseadas nos dados históricos
+            const datas = Object.keys(faturamentoPorData).sort();
+            let faturamentoChange = 0;
+            let lucroChange = 0;
+            let margemChange = 0;
+            
+            if (datas.length >= 2) {
+                const ultima = datas[datas.length - 1];
+                const penultima = datas[datas.length - 2];
+                
+                const faturamentoUltimo = faturamentoPorData[ultima] || 0;
+                const faturamentoPenultimo = faturamentoPorData[penultima] || 0;
+                
+                const gastosUltimo = gastosPorData[ultima] || 0;
+                const gastosPenultimo = gastosPorData[penultima] || 0;
+                
+                const lucroUltimo = faturamentoUltimo - gastosUltimo;
+                const lucroPenultimo = faturamentoPenultimo - gastosPenultimo;
+                
+                if (faturamentoPenultimo > 0) {
+                    faturamentoChange = ((faturamentoUltimo - faturamentoPenultimo) / faturamentoPenultimo) * 100;
+                }
+                
+                if (lucroPenultimo !== 0) {
+                    lucroChange = lucroPenultimo !== 0 ? ((lucroUltimo - lucroPenultimo) / Math.abs(lucroPenultimo)) * 100 : 0;
+                }
+                
+                const margemUltima = faturamentoUltimo > 0 ? (lucroUltimo / faturamentoUltimo) * 100 : 0;
+                const margemPenultima = faturamentoPenultimo > 0 ? (lucroPenultimo / faturamentoPenultimo) * 100 : 0;
+                margemChange = margemUltima - margemPenultima;
+            }
+            
+            // Atualizar interface com animação
+            updateValueWithAnimation('faturamentoTotal', 'R$ ' + faturamentoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2}));
+            updateValueWithAnimation('lucroTotal', 'R$ ' + lucroLiquido.toLocaleString('pt-BR', {minimumFractionDigits: 2}));
+            updateValueWithAnimation('margemLucro', margemLucro.toFixed(1) + '%');
+            
+            // NOVO: Atualizar indicador de cotação
+            updateCurrencyIndicator();
+            
+            // Atualizar indicadores de mudança
+            setTimeout(() => {
+                updateChangeIndicator('faturamentoChange', faturamentoChange);
+                updateChangeIndicator('lucroChange', lucroChange);
+                updateChangeIndicator('margemChange', margemChange);
+            }, 300);
+            
+            // NOVO: Atualizar debug detalhado
+            updateFaturamentoDebug({
+                trafego: faturamentoTrafego,
+                revenue: faturamentoRevenue,
+                consultoria: faturamentoConsultoria,
+                recuperacao: faturamentoRecuperacao,
+                gastos: gastosDebug,
+                total: faturamentoTotal,
+                lucro: lucroLiquido,
+                margem: margemLucro
+            });
+            
+            console.log('=== RESUMO EXECUTIVO ===');
+            console.log(`💱 Cotação USD/BRL: R$ ${dollarRate.toFixed(4)} (${dollarRateSource})`);
+            console.log(`Faturamento Total: R$ ${faturamentoTotal.toLocaleString('pt-BR')}`);
+            console.log(`  - Tráfego: R$ ${faturamentoTrafego.toLocaleString('pt-BR')}`);
+            console.log(`  - Revenue: R$ ${faturamentoRevenue.toLocaleString('pt-BR')} (convertido de USD)`);
+            console.log(`  - Consultoria: R$ ${faturamentoConsultoria.toLocaleString('pt-BR')}`);
+            console.log(`  - Recuperação: R$ ${faturamentoRecuperacao.toLocaleString('pt-BR')}`);
+            console.log(`Gastos Total: R$ ${gastosTotal.toLocaleString('pt-BR')}`);
+            console.log(`Lucro Líquido: R$ ${lucroLiquido.toLocaleString('pt-BR')}`);
+            console.log(`Margem de Lucro: ${margemLucro.toFixed(1)}%`);
+            console.log(`Mudanças: Faturamento ${faturamentoChange.toFixed(1)}%, Lucro ${lucroChange.toFixed(1)}%, Margem ${margemChange.toFixed(1)}%`);
+        }
+
+        // NOVA FUNÇÃO: Atualizar indicador de cotação
+        function updateCurrencyIndicator() {
+            const currentRateEl = document.getElementById('currentRate');
+            const rateSourceEl = document.getElementById('rateSource');
+            
+            if (currentRateEl && rateSourceEl) {
+                currentRateEl.textContent = `R$ ${dollarRate.toFixed(4)}`;
+                
+                const sourceText = dollarRateSource === 'api-exchangerate' ? 'API LIVE' : 
+                                 dollarRateSource === 'api-awesomeapi' ? 'API BR' :
+                                 'FIXO';
+                                 
+                const sourceColor = dollarRateSource.includes('api') ? 'var(--accent-success)' : 'var(--accent-warning)';
+                
+                rateSourceEl.textContent = sourceText;
+                rateSourceEl.style.background = sourceColor;
+            }
+        }
+
+        // NOVA FUNÇÃO: Atualizar valor com animação
+        function updateValueWithAnimation(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            element.style.animation = 'countUp 0.6s ease-out';
+            element.textContent = newValue;
+            
+            setTimeout(() => {
+                element.style.animation = '';
+            }, 600);
+        }
+
+        // FUNÇÃO MELHORADA: Atualizar indicadores de mudança
+        function updateChangeIndicator(elementId, change) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const isPositive = change > 0;
+            const isNeutral = Math.abs(change) < 0.1;
+            const isNoData = change === 0 && filteredData.length > 0;
+            
+            if (isNoData) {
+                element.className = 'kpi-change neutral';
+                element.innerHTML = '📊 Dados insuficientes';
+                element.style.fontSize = '0.75rem';
+            } else {
+                element.className = `kpi-change ${isNeutral ? 'neutral' : isPositive ? 'positive' : 'negative'}`;
+                element.innerHTML = `
+                    ${isNeutral ? '→' : isPositive ? '↗' : '↘'} ${Math.abs(change).toFixed(1)}%
+                `;
+                element.style.fontSize = '0.875rem';
             }
         }
 
@@ -2036,6 +2443,125 @@
             }
             
             container.innerHTML = tableHTML;
+        }
+
+        // NOVA FUNÇÃO: Toggle debug do faturamento
+        function toggleFaturamentoDebug() {
+            const debugInfo = document.getElementById('faturamentoDebugInfo');
+            if (debugInfo.style.display === 'none') {
+                debugInfo.style.display = 'block';
+            } else {
+                debugInfo.style.display = 'none';
+            }
+        }
+
+        // NOVA FUNÇÃO: Atualizar debug detalhado do faturamento
+        function updateFaturamentoDebug(data) {
+            const debugContent = document.getElementById('faturamentoDebugContent');
+            if (!debugContent) return;
+            
+            const percentTrafego = data.total > 0 ? (data.trafego / data.total * 100).toFixed(1) : 0;
+            const percentRevenue = data.total > 0 ? (data.revenue / data.total * 100).toFixed(1) : 0;
+            const percentConsultoria = data.total > 0 ? (data.consultoria / data.total * 100).toFixed(1) : 0;
+            const percentRecuperacao = data.total > 0 ? (data.recuperacao / data.total * 100).toFixed(1) : 0;
+            
+            // Calcular valor original em USD para Revenue
+            const revenueUsd = data.revenue / dollarRate;
+            const rateInfo = dollarRateSource === 'api-exchangerate' ? 'ExchangeRate API' : 
+                           dollarRateSource === 'api-awesomeapi' ? 'AwesomeAPI' :
+                           'Cotação Fixa';
+            
+            debugContent.innerHTML = `
+                <!-- NOVO: Info da cotação -->
+                <div style="background: linear-gradient(135deg, #06b6d4, #0891b2); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; color: white;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.2rem;">💱</span>
+                        <strong>Cotação do Dólar</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1.25rem; font-weight: 700;">USD 1 = R$ ${dollarRate.toFixed(4)}</span>
+                        <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem;">${rateInfo}</span>
+                    </div>
+                </div>
+                
+                <div style="display: grid; gap: 1.5rem;">
+                    <div style="background: var(--bg-primary); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #3b82f6;">
+                        <h5 style="color: #3b82f6; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            🚀 Tráfego - Vendas
+                        </h5>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>R$ ${data.trafego.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                            <span style="background: rgba(59, 130, 246, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem;">${percentTrafego}%</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-primary); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #10b981;">
+                        <h5 style="color: #10b981; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            💵 Revenue - Revenue Share
+                        </h5>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span>R$ ${data.revenue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                            <span style="background: rgba(16, 185, 129, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem;">${percentRevenue}%</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; justify-content: space-between;">
+                            <span>💰 Original: USD ${revenueUsd.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                            <span>🔄 Convertido automaticamente</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-primary); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #f59e0b;">
+                        <h5 style="color: #f59e0b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            🎯 Consultoria - Valor Vendido
+                        </h5>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>R$ ${data.consultoria.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                            <span style="background: rgba(245, 158, 11, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem;">${percentConsultoria}%</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-primary); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #ef4444;">
+                        <h5 style="color: #ef4444; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            🔄 Recuperação - Total Vendido
+                        </h5>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>R$ ${data.recuperacao.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                            <span style="background: rgba(239, 68, 68, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem;">${percentRecuperacao}%</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-secondary); padding: 2rem; border-radius: 12px; border: 2px solid var(--accent-primary);">
+                        <h5 style="color: var(--accent-primary); margin-bottom: 1.5rem; text-align: center;">📊 RESUMO FINAL</h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">FATURAMENTO TOTAL</div>
+                                <div style="color: var(--accent-success); font-size: 1.5rem; font-weight: 700;">R$ ${data.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">GASTOS TOTAL</div>
+                                <div style="color: var(--accent-danger); font-size: 1.5rem; font-weight: 700;">R$ ${data.gastos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">LUCRO LÍQUIDO</div>
+                                <div style="color: ${data.lucro >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'}; font-size: 1.5rem; font-weight: 700;">R$ ${data.lucro.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">MARGEM</div>
+                                <div style="color: ${data.margem >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'}; font-size: 1.5rem; font-weight: 700;">${data.margem.toFixed(1)}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-glass);">
+                        <div style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6;">
+                            <strong style="color: var(--text-primary);">💡 Fórmula do Cálculo:</strong><br>
+                            Faturamento = Tráfego(Vendas-BRL) + Revenue(Revenue Share-USD→BRL) + Consultoria(Valor Vendido-BRL) + Recuperação(Total Vendido-BRL)<br>
+                            Lucro Líquido = Faturamento Total - Gastos (Tráfego)<br>
+                            Margem = (Lucro Líquido / Faturamento Total) × 100<br>
+                            <strong style="color: var(--accent-warning);">💱 Revenue Share convertido de USD para BRL usando cotação ${rateInfo}</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         // NOVA FUNÇÃO: Toggle debug info
